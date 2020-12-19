@@ -22,6 +22,7 @@ def fill_in(string_rep):
                 sodoku[row][col] = int(string_rep[counter])
             counter += 1
 
+
 def print_sodoku():
     for row in range(9):
         for col in range(9):
@@ -47,41 +48,33 @@ def isValid(row, col, value):
 
     return True
 
-def nextBlank(pos):
-    
-    col_temp = pos[1]
-    row_temp = pos[0]
-    while (row_temp<9):    
-        while (col_temp<9):
-            if sodoku[row_temp][col_temp] == 0:
-                return [row_temp, col_temp]
-            col_temp += 1
-        col_temp = 0
-        row_temp+= 1
-    print("oof")
-    return [-1,-1]
+def nextBlank():
+    for i in range(9):
+        for j in range(9):
+            if sodoku[i][j] == 0:
+                return (i, j)
+    return None
 
-def recursive(pos):
-   
+def recursive():
+    pos = nextBlank()
+    if pos == None:
+        return True
+
     for i in range(1,10):
         if isValid(pos[0], pos[1], i):  
-            sodoku[pos[0]][pos[1]] = i 
-            if (pos[0]!=8 or pos[1]!=8):         
-                if recursive(nextBlank(pos))==True:
-                    return True
-            else:
+            sodoku[pos[0]][pos[1]] = i                  
+            if recursive():
                 return True
-    sodoku[pos[0]][pos[1]] = 0
+        sodoku[pos[0]][pos[1]] = 0
     return False   
             
-
 def main():
-    test_string = "4.....8.5.3..........7......2.....6.....8.4......1.......6.3.7.5..2.....1.4......"
+    test_string = "..5.78..9.8.......27....1........24319.7....5...3......4...1......8.5..73.....9.."
     init_arr()
     fill_in(test_string)
     print_sodoku()
     print("\n --- soln ---")
-    recursive(nextBlank([0,0]))
+    recursive()
     print_sodoku()
     
     #print(str(nextBlank([8,8])))
@@ -89,8 +82,3 @@ def main():
 
 if __name__=="__main__":
     main()
-
-
-            
-
-
