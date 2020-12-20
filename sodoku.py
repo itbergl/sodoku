@@ -1,8 +1,14 @@
 from os import environ
 environ['PYGAME_HIDE_SUPPORT_PROMPT'] = '1'
 
+import time
+import multiprocessing
+
 import numpy as np
 import pygame
+import random
+
+
 
 #initialise blank sodoku array
 sodoku = []
@@ -69,16 +75,31 @@ def recursive():
     return False   
             
 def main():
-    test_string = "..5.78..9.8.......27....1........24319.7....5...3......4...1......8.5..73.....9.."
+    Sample_file = open("Samples.txt","r")
+    list = Sample_file.readlines()
+
+    sodoku = random.choice(list)
+
     init_arr()
-    fill_in(test_string)
+    fill_in(sodoku)
     print_sodoku()
     print("\n --- soln ---")
+    
     recursive()
     print_sodoku()
     
     #print(str(nextBlank([8,8])))
+    Sample_file.close()
+    exit()
     
 
 if __name__=="__main__":
-    main()
+    p = multiprocessing.Process(target=main, name="Sodoku Solver", args=())
+    p.start()
+    
+    time.sleep(1)
+    # Terminate foo
+    if p.is_alive():
+        print("\n Process terminated after 1 second. No solutions exist ... probably\n")
+        p.terminate()
+        p.join()
