@@ -5,7 +5,6 @@ import time
 import multiprocessing
 
 import numpy as np
-import pygame
 import random
 
 
@@ -98,7 +97,31 @@ def recursive(sodoku):
             if recursive(sodoku):
                 return True
         sodoku[pos[0]][pos[1]] = 0
-    return False   
+    return False  
+
+def runRecursiveHistory(sodoku):
+    dummy = np.copy(sodoku)
+    file = open("new.txt", "w")
+    recursiveHistory(dummy, file)
+    file.close()
+
+def recursiveHistory(sodoku, file):
+    
+
+    pos = nextBlank(sodoku)
+    if pos == None:
+        return True
+
+    for i in range(1,10):
+        file.write("t" + str(i)  + str(pos[0])  + str(pos[1]) + "\n")
+        if isValid(sodoku, pos[0], pos[1], i):  
+            sodoku[pos[0]][pos[1]] = i  
+            file.write("m" + str(i) + str(pos[0]) +  str(pos[1]) + "\n")                
+            if recursiveHistory(sodoku, file):
+                return True
+        sodoku[pos[0]][pos[1]] = 0
+        file.write("f0" + str(pos[0]) + str(pos[1]) + "\n")  
+    return False  
             
 def main():
     sodoku = init_arr()
