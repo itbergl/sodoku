@@ -104,9 +104,9 @@ def runRecursiveHistory(sodoku):
     file = open("new.txt", "w")
     recursiveHistory(dummy, file)
     file.close()
+    return dummy
 
-def recursiveHistory(sodoku, file):
-    
+def recursiveHistory(sodoku, file): 
 
     pos = nextBlank(sodoku)
     if pos == None:

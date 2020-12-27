@@ -1,4 +1,5 @@
 import pygame
+from pygame.mixer import pause
 import sodoku
 import colour
 
@@ -6,7 +7,7 @@ import numpy as np
 import time
 
 pygame.init()
-
+GAMEOVERSCREEN = True
 #Colours
 BLACK = (0,0,0)
 WHITE = (255, 255, 255)
@@ -40,31 +41,40 @@ def highlightCell(coord, COL):
 
 
 running = True
-def backtrackVisualise(board):
+def backtrackVisualise(screen):
+    global board
     SIMULATE = True
     file = open("new.txt")
-    sodoku.runRecursiveHistory(board)
+    ret = sodoku.runRecursiveHistory(board)
    
     while SIMULATE:
-        # time.sleep(0.001)
         screen.fill(WHITE)
+        NEXTSTEP = True
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 SIMULATE, running = False
-
-        string = file.readline()
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+                board = ret
+                NEXTSTEP = False
+                SIMULATE = False
+                
+                
+        if NEXTSTEP:
+            string = file.readline()
         
-        act = string[0]
-        num = int(string[1])
-        posr = int(string[2])
-        posc = int(string[3])
+            act = string[0]
+            num = int(string[1])
+            posr = int(string[2])
+            posc = int(string[3])
 
-        board[posr][posc] = num
+            board[posr][posc] = num
 
 
         drawBoard(screen)
     
         pygame.display.update()
+
+
 #ghost entries
 ghost = []
     
@@ -93,6 +103,8 @@ def ghostEntry():
 
 def pauseScreen(screen):
     PAUSED = True
+    global GAMEOVERSCREEN
+    global running
     while PAUSED:
 
         drawBoard(screen)
@@ -141,10 +153,14 @@ def pauseScreen(screen):
                     global ghost
                     board = sodoku.init_arr()
                     ghost = []
+                    GAMEOVERSCREEN = False
                     init_ghost(ghost)
                     PAUSED = False
                 if QUIT_BOX.collidepoint(x,y):
-                    PAUSED, running = False
+                    PAUSED = False
+                    running = False
+                    
+                    GAMEOVERSCREEN = False
             if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                 PAUSED = False
 
@@ -179,20 +195,23 @@ def drawBoard(screen):
 highlightcell = (-1,-1)
 oldcell = (-1,-1)
 numbers = (pygame.K_1, pygame.K_2, pygame.K_3, pygame.K_4, pygame.K_5,pygame.K_6, pygame.K_7, pygame.K_8, pygame.K_9 )
+Clock = pygame.time.Clock()
 while running:
+    
     screen.fill(WHITE)    
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-        if event.type == pygame.MOUSEBUTTONDOWN:
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button in (1,3):
             mouse_pos = pygame.mouse.get_pos()
+            
             
             oldcell = highlightcell
             highlightcell = (int(mouse_pos[0]/cell_size), int(mouse_pos[1]/cell_size))
             if highlightcell[0] > 8 or highlightcell[1] > 8:
                 highlightcell = (-1,-1)
-            print("Mouse (" + str(highlightcell[0]) + ", " + str(highlightcell[1]) + ")")
+            print(pygame.mouse.get_pressed())
         if event.type == pygame.KEYDOWN:
             c = int(highlightcell[0])
             r = int(highlightcell[1])
@@ -218,8 +237,8 @@ while running:
                 print(str(value))
                
             elif event.key == pygame.K_SPACE:                
-               backtrackVisualise(board)  
-               print("Space")
+                backtrackVisualise(screen) 
+                print("Space")
                  
     if oldcell != highlightcell:
         highlightCell(oldcell, WHITE)
@@ -229,19 +248,24 @@ while running:
         highlightCell(oldcell, WHITE)
         highlightCell(highlightcell, YELLOW)
 
-    drawBoard(screen)          
+    drawBoard(screen)  
+
     pygame.display.update()
 
-    GAMEOVERSCREEN = True
+    
     if sodoku.nextBlank(board) is None:
    
         while GAMEOVERSCREEN:
-             for event in pygame.event.get():
+            for event in pygame.event.get():
                 if event.type == pygame.QUIT:
-                    GAMEOVERSCREEN, running = False
-                pygame.draw.rect(screen,BLACK,(0, 540, 540, 60))
-                pygame.draw.rect(screen,WHITE,(2, 542, 536, 66))
-                num_font = pygame.font.Font('freesansbold.ttf', 40)
-                static_num_dsp = num_font.render("YOU WIN!", True, (0,0,0))
-                screen.blit(static_num_dsp, (175, 550))
-                pygame.display.update() 
+                    GAMEOVERSCREEN = False                  
+                    running = False
+                if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                    pauseScreen(screen)
+                    print("jere")
+            pygame.draw.rect(screen,BLACK,(0, 540, 540, 60))
+            pygame.draw.rect(screen,WHITE,(2, 542, 536, 66))
+            num_font = pygame.font.Font('freesansbold.ttf', 40)
+            static_num_dsp = num_font.render("YOU WIN!", True, (0,0,0))
+            screen.blit(static_num_dsp, (175, 550))
+            pygame.display.update() 
