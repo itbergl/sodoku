@@ -101,9 +101,9 @@ def recursive(sodoku):
 
 def runRecursiveHistory(sodoku):
     dummy = np.copy(sodoku)
-    file = open("new.txt", "w")
-    recursiveHistory(dummy, file)
-    file.close()
+    file = open("dep/temp.txt", "w+")   
+    recursiveHistory(dummy, file) 
+    file.close()  
     return dummy
 
 def recursiveHistory(sodoku, file): 
@@ -137,12 +137,11 @@ def main():
     
 
 if __name__=="__main__":
-    p = multiprocessing.Process(target=main, name="Sodoku Solver", args=())
-    p.start()
-    
-    time.sleep(3)
-    # Terminate foo
-    if p.is_alive():
-        print("\n Process terminated  after 1 second. No solutions exist ... probably\n")
-        p.terminate()
-        p.join()
+    main()
+    # p = multiprocessing.Process(target=main, name="Sodoku Solver", args=())
+    # p.start()
+    # # Terminate foo
+    # if p.is_alive():
+    #     print("\n Process terminated  after 1 second. No solutions exist ... probably\n")
+    #     p.terminate()
+    #     p.join()

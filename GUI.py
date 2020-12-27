@@ -1,7 +1,8 @@
 import pygame
 from pygame.mixer import pause
+import os
+os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
 import sodoku
-import colour
 
 import numpy as np
 import time
@@ -20,6 +21,7 @@ screen = pygame.display.set_mode((9*cell_size,10*cell_size))
 
 #initialise board
 board = sodoku.init_arr()
+board_copy = np.copy(board)
 
 gameover = False
 
@@ -44,7 +46,7 @@ running = True
 def backtrackVisualise(screen):
     global board
     SIMULATE = True
-    file = open("new.txt")
+    file = open("dep/temp.txt", "w+")
     ret = sodoku.runRecursiveHistory(board)
    
     while SIMULATE:
@@ -73,6 +75,8 @@ def backtrackVisualise(screen):
         drawBoard(screen)
     
         pygame.display.update()
+    file.close()
+    os.remove("dep/temp.txt")
 
 
 #ghost entries
@@ -137,6 +141,9 @@ def pauseScreen(screen):
         static_num_dsp = num_font.render("QUIT", True, (0,0,0))
         screen.blit(static_num_dsp, (210, 339))
 
+        global board
+        global ghost
+        global board_copy
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -149,9 +156,9 @@ def pauseScreen(screen):
                 if RETURN_BOX.collidepoint(x,y):
                     PAUSED = False
                 if NEW_BOX.collidepoint(x,y):
-                    global board
-                    global ghost
+                    
                     board = sodoku.init_arr()
+                    board_copy = np.copy(board)
                     ghost = []
                     GAMEOVERSCREEN = False
                     init_ghost(ghost)
@@ -161,16 +168,18 @@ def pauseScreen(screen):
                     running = False
                     
                     GAMEOVERSCREEN = False
+                if RESET_BOX.collidepoint(x,y):
+                    PAUSED = False
+                    board = np.copy(board_copy)
+                    ghost = []
+                    init_ghost(ghost)
+                    GAMEOVERSCREEN = False
+
             if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                 PAUSED = False
 
 
         pygame.display.update()
-
-
-
-    
-
 
 def drawBoard(screen):
     for r in range(9):
@@ -201,8 +210,10 @@ while running:
     screen.fill(WHITE)    
 
     for event in pygame.event.get():
+        #close game
         if event.type == pygame.QUIT:
             running = False
+        #click for L and R mouse click
         if event.type == pygame.MOUSEBUTTONDOWN and event.button in (1,3):
             mouse_pos = pygame.mouse.get_pos()
             
@@ -215,30 +226,37 @@ while running:
         if event.type == pygame.KEYDOWN:
             c = int(highlightcell[0])
             r = int(highlightcell[1])
-           # print(highlightcell)
-
+           
+            # pause game
             if event.key == pygame.K_ESCAPE:
                 pauseScreen(screen)
             
+            #input ghost entry
             if event.key in numbers and pygame.key.get_mods() & pygame.KMOD_LCTRL:
                 
                 value = int(pygame.key.name(event.key))
 
                 print("CTRL " + str(value))
                 if value not in ghost[r][c]:
-                    ghost[r][c][value-1]=value#add to ghost entries
+                    ghost[r][c][value-1]=value
                 else:
                     ghost[r][c][value-1] = 0
 
+            #input answer numbers
             elif event.key in numbers:
                 value = int(pygame.key.name(event.key))
                 if sodoku.addEntry(board, r, c, value):
                     ghost[r][c] = [0,0,0,0,0,0,0,0,0] 
                 print(str(value))
-               
+
+            #run backtracking algorithm visualisation animation
             elif event.key == pygame.K_SPACE:                
                 backtrackVisualise(screen) 
                 print("Space")
+            #Backspace if it is a writable cell
+            elif event.key == pygame.K_BACKSPACE:
+                if board_copy[r][c] == 0:
+                    board[r][c] = 0
                  
     if oldcell != highlightcell:
         highlightCell(oldcell, WHITE)
