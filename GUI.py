@@ -31,9 +31,9 @@ pygame.display.set_caption("Sodoku Player")
 icon = pygame.image.load("dep/sudoku.png")
 pygame.display.set_icon(icon)
 
-def displayNum(num, r, c):
+def displayNum(num, r, c, colour):
     num_font = pygame.font.Font('freesansbold.ttf', 40)
-    static_num_dsp = num_font.render(str(num), True, (0,0,0))
+    static_num_dsp = num_font.render(str(num), True, colour)
     screen.blit(static_num_dsp, ((c+0.25)*cell_size, (r+0.25)*cell_size))
 
 def highlightCell(coord, COL):
@@ -82,13 +82,25 @@ def backtrackVisualise(screen):
 #ghost entries
 ghost = []
     
-def init_ghost(ghost):
+def init_ghost():
+    global ghost
     for r in range(9):
         row = []
         for c in range(9):
             row.append([0,0,0,0,0,0,0,0,0])
         ghost.append(row)
-init_ghost(ghost)
+init_ghost()
+
+badEntry = []
+    
+def init_badEntry():
+    global badEntry
+    for r in range(9):
+        row = []
+        for c in range(9):
+            row.append(0)
+        badEntry.append(row)
+init_badEntry()
 
 def ghostEntry():
 
@@ -161,7 +173,7 @@ def pauseScreen(screen):
                     board_copy = np.copy(board)
                     ghost = []
                     GAMEOVERSCREEN = False
-                    init_ghost(ghost)
+                    init_ghost()
                     PAUSED = False
                 if QUIT_BOX.collidepoint(x,y):
                     PAUSED = False
@@ -172,7 +184,7 @@ def pauseScreen(screen):
                     PAUSED = False
                     board = np.copy(board_copy)
                     ghost = []
-                    init_ghost(ghost)
+                    init_ghost()
                     GAMEOVERSCREEN = False
 
             if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
@@ -182,10 +194,22 @@ def pauseScreen(screen):
         pygame.display.update()
 
 def drawBoard(screen):
+    DULLRED = (200,200,255)
     for r in range(9):
         for c in range(9):
-            if board[r][c] != 0:
-                displayNum(board[r][c], r, c)   
+            if badEntry[r][c] != 0:
+                for r_2 in range(9):
+                    for c_2 in range(9):
+                        if board[r_2][c_2] == badEntry[r][c]:
+                            highlightCell((c_2, r_2), DULLRED)
+
+    for r in range(9):
+        for c in range(9):
+            if board[r][c] != 0:     
+                displayNum(board[r][c], r, c, (0,0,0))
+            if badEntry[r][c] != 0:  
+                    displayNum(badEntry[r][c], r, c, (255,0,0)) 
+    
 
     ghostEntry()
 
@@ -245,8 +269,16 @@ while running:
             #input answer numbers
             elif event.key in numbers:
                 value = int(pygame.key.name(event.key))
-                if sodoku.addEntry(board, r, c, value):
-                    ghost[r][c] = [0,0,0,0,0,0,0,0,0] 
+                if board_copy[r][c] == 0:
+                    if sodoku.addEntry(board, r, c, value):
+                        
+                        ghost[r][c] = [0,0,0,0,0,0,0,0,0]
+                        badEntry[r][c] = 0
+                    elif board[r][c]!=value:
+                        if badEntry[r][c]==value:
+                            value = 0
+                        badEntry[r][c] = value                   
+
                 print(str(value))
 
             #run backtracking algorithm visualisation animation
