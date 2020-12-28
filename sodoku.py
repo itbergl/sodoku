@@ -99,28 +99,26 @@ def recursive(sodoku):
         sodoku[pos[0]][pos[1]] = 0
     return False  
 
-def runRecursiveHistory(sodoku):
-    dummy = np.copy(sodoku)
-    file = open("dep/temp.txt", "w+")   
-    recursiveHistory(dummy, file) 
-    file.close()  
+def runRecursiveHistory(sodoku, ans):
+    dummy = np.copy(sodoku) 
+    recursiveHistory(dummy, ans) 
     return dummy
 
-def recursiveHistory(sodoku, file): 
+def recursiveHistory(sodoku, list): 
 
     pos = nextBlank(sodoku)
     if pos == None:
         return True
-
+    
     for i in range(1,10):
-        file.write("t" + str(i)  + str(pos[0])  + str(pos[1]) + "\n")
+        list.append("t" + str(i)  + str(pos[0])  + str(pos[1]) + "\n")
         if isValid(sodoku, pos[0], pos[1], i):  
             sodoku[pos[0]][pos[1]] = i  
-            file.write("m" + str(i) + str(pos[0]) +  str(pos[1]) + "\n")                
-            if recursiveHistory(sodoku, file):
+            list.append("m" + str(i) + str(pos[0]) +  str(pos[1]) + "\n")                
+            if recursiveHistory(sodoku, list):
                 return True
         sodoku[pos[0]][pos[1]] = 0
-        file.write("f0" + str(pos[0]) + str(pos[1]) + "\n")  
+        list.append("f0" + str(pos[0]) + str(pos[1]) + "\n")  
     return False  
             
 def main():

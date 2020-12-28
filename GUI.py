@@ -24,6 +24,7 @@ board = sodoku.init_arr()
 board_copy = np.copy(board)
 
 gameover = False
+simulated = False
 
 TOGGLECTRL = False
 
@@ -44,17 +45,21 @@ def highlightCell(coord, COL):
 
 running = True
 def backtrackVisualise(screen):
+    index = 0
     global board
+    global simulated
+    simulated = True
     SIMULATE = True
-    file = open("dep/temp.txt", "w+")
-    ret = sodoku.runRecursiveHistory(board)
+    list = []
+    ret = sodoku.runRecursiveHistory(board, list)
    
     while SIMULATE:
         screen.fill(WHITE)
         NEXTSTEP = True
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                SIMULATE, running = False
+                SIMULATE = False
+                running = False
             if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
                 board = ret
                 NEXTSTEP = False
@@ -62,21 +67,26 @@ def backtrackVisualise(screen):
                 
                 
         if NEXTSTEP:
-            string = file.readline()
-        
-            act = string[0]
-            num = int(string[1])
-            posr = int(string[2])
-            posc = int(string[3])
+            if len(list) >= index-1:
+                string = list[index]
+                index += 1
+            
+                act = string[0]
+                num = int(string[1])
+                posr = int(string[2])
+                posc = int(string[3])
 
-            board[posr][posc] = num
+                board[posr][posc] = num
+            else:
+                SIMULATE = False
+
 
 
         drawBoard(screen)
     
         pygame.display.update()
-    file.close()
-    os.remove("dep/temp.txt")
+    
+    
 
 
 #ghost entries
@@ -316,6 +326,13 @@ while running:
             pygame.draw.rect(screen,BLACK,(0, 540, 540, 60))
             pygame.draw.rect(screen,WHITE,(2, 542, 536, 66))
             num_font = pygame.font.Font('freesansbold.ttf', 40)
-            static_num_dsp = num_font.render("YOU WIN!", True, (0,0,0))
-            screen.blit(static_num_dsp, (175, 550))
+           
+            if simulated:
+                static_num_dsp = num_font.render("COMPUTER WINS!", True, (0,0,0))
+                screen.blit(static_num_dsp, (105, 550))
+            else:
+                static_num_dsp = num_font.render("YOU WIN!", True, (0,0,0))
+                screen.blit(static_num_dsp, (175, 550))
+            
+            
             pygame.display.update() 
