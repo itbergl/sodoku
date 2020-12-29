@@ -233,14 +233,48 @@ def drawBoard(screen):
         if c%3 == 0:
             thickness = 2       
         pygame.draw.line(screen,BLACK,(0, c*cell_size), (9*cell_size, c*cell_size),thickness)
-                       
+
+
+def bottomText(screen):
+    num_font = pygame.font.Font('freesansbold.ttf', 16)
+    #Space     
+    static_num_dsp = num_font.render("Space: start solve (press again to skip)", True, (0,0,0))
+    screen.blit(static_num_dsp, (0, 550))
+
+    #GHOST    
+    static_num_dsp = num_font.render("Shift + num: ghost entry", True, (0,0,0))
+    screen.blit(static_num_dsp, (350, 550))
+
+    #PAUSE
+    static_num_dsp = num_font.render("Esc: open menu", True, (0,0,0))
+    screen.blit(static_num_dsp, (0, 580))
+
+    #BACKSPACE
+    static_num_dsp = num_font.render("Backspace: erase entry", True, (0,0,0))
+    screen.blit(static_num_dsp, (350, 580))
+
+def printClock(time, screen):
+    #print box
+    TIME_BOX = pygame.Rect((210, 570, 120, 30)) 
+    pygame.draw.rect(screen,BLACK,TIME_BOX)
+
+    #print time
+    num_font = pygame.font.Font('freesansbold.ttf', 20)
+    static_num_dsp = num_font.render(str(time/1000), True, WHITE)
+    screen.blit(static_num_dsp, (250, 574))
+
+
+
 #Game Loop
 highlightcell = (-1,-1)
 oldcell = (-1,-1)
 numbers = (pygame.K_1, pygame.K_2, pygame.K_3, pygame.K_4, pygame.K_5,pygame.K_6, pygame.K_7, pygame.K_8, pygame.K_9 )
-Clock = pygame.time.Clock()
+clock = pygame.time.Clock()
+passed_time = 0
+timer_started = False
 while running:
-    
+    passed_time += clock.get_time()
+    print(passed_time)
     screen.fill(WHITE)    
 
     for event in pygame.event.get():
@@ -256,6 +290,7 @@ while running:
             highlightcell = (int(mouse_pos[0]/cell_size), int(mouse_pos[1]/cell_size))
             if highlightcell[0] > 8 or highlightcell[1] > 8:
                 highlightcell = (-1,-1)
+            
             print(pygame.mouse.get_pressed())
         if event.type == pygame.KEYDOWN:
             c = int(highlightcell[0])
@@ -266,9 +301,11 @@ while running:
                 pauseScreen(screen)
             
             #input ghost entry
-            if event.key in numbers and pygame.key.get_mods() & pygame.KMOD_LCTRL:
-                
-                value = int(pygame.key.name(event.key))
+            if (event.key in numbers or event.key == pygame.K_BACKSPACE) and pygame.key.get_mods() & pygame.KMOD_LCTRL:
+                if event.key == pygame.K_BACKSPACE:
+                    value = 0
+                else:
+                    value = int(pygame.key.name(event.key))
 
                 print("CTRL " + str(value))
                 if value not in ghost[r][c]:
@@ -309,7 +346,9 @@ while running:
         highlightCell(highlightcell, YELLOW)
 
     drawBoard(screen)  
-
+    bottomText(screen)
+    printClock(passed_time, screen)
+    clock.tick(30)
     pygame.display.update()
 
     
@@ -327,12 +366,12 @@ while running:
             pygame.draw.rect(screen,WHITE,(2, 542, 536, 66))
             num_font = pygame.font.Font('freesansbold.ttf', 40)
            
-            if simulated:
+            if not simulated:
                 static_num_dsp = num_font.render("COMPUTER WINS!", True, (0,0,0))
                 screen.blit(static_num_dsp, (105, 550))
             else:
-                static_num_dsp = num_font.render("YOU WIN!", True, (0,0,0))
-                screen.blit(static_num_dsp, (175, 550))
+                static_num_dsp = num_font.render("YOU WIN!    " + str(passed_time/1000) + "s", True, (0,0,0))
+                screen.blit(static_num_dsp, (80, 550))
             
             
             pygame.display.update() 
