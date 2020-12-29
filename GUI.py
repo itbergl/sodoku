@@ -8,7 +8,11 @@ import numpy as np
 import time
 
 pygame.init()
-GAMEOVERSCREEN = True
+
+#Clock
+clock = pygame.time.Clock()
+passed_time = 0
+
 #Colours
 BLACK = (0,0,0)
 WHITE = (255, 255, 255)
@@ -19,6 +23,11 @@ YELLOW = (255, 255, 153)
 cell_size = 60
 screen = pygame.display.set_mode((9*cell_size,10*cell_size))
 
+#Icon
+pygame.display.set_caption("Sodoku Player")
+icon = pygame.image.load("dep/sudoku.png")
+pygame.display.set_icon(icon)
+
 #initialise board
 board = sodoku.init_arr()
 board_copy = np.copy(board)
@@ -26,16 +35,18 @@ board_copy = np.copy(board)
 ghost = []
 badEntry = []
 
+
+#booleans
 gameover = False
 simulated = False
 running = True
 
+
+GAMEOVERSCREEN = True
 TOGGLECTRL = False
+TIMERSTARTED = False
 
-pygame.display.set_caption("Sodoku Player")
-icon = pygame.image.load("dep/sudoku.png")
-pygame.display.set_icon(icon)
-
+#METHODS
 def displayNum(num, r, c, colour):
     num_font = pygame.font.Font('freesansbold.ttf', 40)
     static_num_dsp = num_font.render(str(num), True, colour)
@@ -88,9 +99,7 @@ def backtrackVisualise(screen):
         drawBoard(screen)
     
         pygame.display.update()
-#ghost entries
-
-    
+#ghost entries    
 def init_ghost():
     global ghost
     ghost = []
@@ -99,8 +108,7 @@ def init_ghost():
         for c in range(9):
             row.append([0,0,0,0,0,0,0,0,0])
         ghost.append(row)
-
-    
+   
 def init_badEntry():
     global badEntry
     for r in range(9):
@@ -108,7 +116,6 @@ def init_badEntry():
         for c in range(9):
             row.append(0)
         badEntry.append(row)
-
 
 def ghostEntry():
 
@@ -232,8 +239,7 @@ def drawBoard(screen):
             thickness = 2       
         pygame.draw.line(screen,BLACK,(0, c*cell_size), (9*cell_size, c*cell_size),thickness)
 
-
-def bottomText(screen):
+def drawBottomText(screen):
     num_font = pygame.font.Font('freesansbold.ttf', 16)
     #Space     
     static_num_dsp = num_font.render("Space: start solve (press again to skip)", True, (0,0,0))
@@ -261,15 +267,40 @@ def printClock(time, screen):
     static_num_dsp = num_font.render(str(time/1000), True, WHITE)
     screen.blit(static_num_dsp, (250, 574))
 
+def gameOverLoop(screen):
+    global GAMEOVERSCREEN
+    global running
+    if sodoku.nextBlank(board) is None:
+   
+        while GAMEOVERSCREEN:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    GAMEOVERSCREEN = False                  
+                    running = False
+                if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                    pauseScreen(screen)
+                    print("jere")
+            pygame.draw.rect(screen,BLACK,(0, 540, 540, 60))
+            pygame.draw.rect(screen,WHITE,(2, 542, 536, 66))
+            num_font = pygame.font.Font('freesansbold.ttf', 40)
+           
+            if simulated:
+                static_num_dsp = num_font.render("COMPUTER WINS!", True, (0,0,0))
+                screen.blit(static_num_dsp, (105, 550))
+            else:
+                static_num_dsp = num_font.render("YOU WIN!    " + str(passed_time/1000) + "s", True, (0,0,0))
+                screen.blit(static_num_dsp, (80, 550))
+            
+            
+            pygame.display.update() 
 
 
 #Game Loop
 highlightcell = (-1,-1)
 oldcell = (-1,-1)
 numbers = (pygame.K_1, pygame.K_2, pygame.K_3, pygame.K_4, pygame.K_5,pygame.K_6, pygame.K_7, pygame.K_8, pygame.K_9 )
-clock = pygame.time.Clock()
-passed_time = 0
-timer_started = False
+
+
 init_ghost()
 init_badEntry()
 while running:
@@ -346,32 +377,13 @@ while running:
         highlightCell(highlightcell, YELLOW)
 
     drawBoard(screen)  
-    bottomText(screen)
+    drawBottomText(screen)
     printClock(passed_time, screen)
     clock.tick(30)
+
+    gameOverLoop(screen)
+
     pygame.display.update()
 
     
-    if sodoku.nextBlank(board) is None:
    
-        while GAMEOVERSCREEN:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    GAMEOVERSCREEN = False                  
-                    running = False
-                if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                    pauseScreen(screen)
-                    print("jere")
-            pygame.draw.rect(screen,BLACK,(0, 540, 540, 60))
-            pygame.draw.rect(screen,WHITE,(2, 542, 536, 66))
-            num_font = pygame.font.Font('freesansbold.ttf', 40)
-           
-            if simulated:
-                static_num_dsp = num_font.render("COMPUTER WINS!", True, (0,0,0))
-                screen.blit(static_num_dsp, (105, 550))
-            else:
-                static_num_dsp = num_font.render("YOU WIN!    " + str(passed_time/1000) + "s", True, (0,0,0))
-                screen.blit(static_num_dsp, (80, 550))
-            
-            
-            pygame.display.update() 
