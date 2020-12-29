@@ -7,11 +7,7 @@ import multiprocessing
 import numpy as np
 import random
 
-
-
 #initialise blank sodoku array
-
-
 def init_arr():
     sodoku = []
     Sample_file = None

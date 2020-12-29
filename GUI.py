@@ -23,8 +23,12 @@ screen = pygame.display.set_mode((9*cell_size,10*cell_size))
 board = sodoku.init_arr()
 board_copy = np.copy(board)
 
+ghost = []
+badEntry = []
+
 gameover = False
 simulated = False
+running = True
 
 TOGGLECTRL = False
 
@@ -43,7 +47,6 @@ def highlightCell(coord, COL):
     pygame.draw.rect(screen,COL,(xpos, ypos, cell_size, cell_size))
 
 
-running = True
 def backtrackVisualise(screen):
     index = 0
     global board
@@ -85,23 +88,18 @@ def backtrackVisualise(screen):
         drawBoard(screen)
     
         pygame.display.update()
-    
-    
-
-
 #ghost entries
-ghost = []
+
     
 def init_ghost():
     global ghost
+    ghost = []
     for r in range(9):
         row = []
         for c in range(9):
             row.append([0,0,0,0,0,0,0,0,0])
         ghost.append(row)
-init_ghost()
 
-badEntry = []
     
 def init_badEntry():
     global badEntry
@@ -110,7 +108,7 @@ def init_badEntry():
         for c in range(9):
             row.append(0)
         badEntry.append(row)
-init_badEntry()
+
 
 def ghostEntry():
 
@@ -272,9 +270,10 @@ numbers = (pygame.K_1, pygame.K_2, pygame.K_3, pygame.K_4, pygame.K_5,pygame.K_6
 clock = pygame.time.Clock()
 passed_time = 0
 timer_started = False
+init_ghost()
+init_badEntry()
 while running:
     passed_time += clock.get_time()
-    print(passed_time)
     screen.fill(WHITE)    
 
     for event in pygame.event.get():
@@ -329,7 +328,8 @@ while running:
                 print(str(value))
 
             #run backtracking algorithm visualisation animation
-            elif event.key == pygame.K_SPACE:                
+            elif event.key == pygame.K_SPACE: 
+                init_ghost()               
                 backtrackVisualise(screen) 
                 print("Space")
             #Backspace if it is a writable cell
@@ -366,7 +366,7 @@ while running:
             pygame.draw.rect(screen,WHITE,(2, 542, 536, 66))
             num_font = pygame.font.Font('freesansbold.ttf', 40)
            
-            if not simulated:
+            if simulated:
                 static_num_dsp = num_font.render("COMPUTER WINS!", True, (0,0,0))
                 screen.blit(static_num_dsp, (105, 550))
             else:
