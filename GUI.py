@@ -1,23 +1,14 @@
 import pygame
 from pygame.mixer import pause
 import os
-os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
 import sodoku
-
 import numpy as np
 import time
 
+#hide default pygame message in console
+os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
+
 pygame.init()
-
-#Clock
-clock = pygame.time.Clock()
-passed_time = 0
-
-#Colours
-BLACK = (0,0,0)
-WHITE = (255, 255, 255)
-GREY = (200,200,200)
-YELLOW = (255, 255, 153)
 
 #Screen
 cell_size = 60
@@ -28,20 +19,32 @@ pygame.display.set_caption("Sodoku Player")
 icon = pygame.image.load("dep/sudoku.png")
 pygame.display.set_icon(icon)
 
+#Colours
+BLACK = pygame.Color((0,0,0))
+WHITE = pygame.Color((255,255,255))
+GREY = pygame.Color((200,200,200))
+YELLOW = pygame.Color((255, 255, 153))
+DULLRED = pygame.Color((200,200,255))
+
 #initialise board
 board = sodoku.init_arr()
 board_copy = np.copy(board)
 
+#data scructures
+
+#ghost entries
 ghost = []
+#wrong entries - shown in red
 badEntry = []
 
+#Clock
+clock = pygame.time.Clock()
+passed_time = 0
 
 #booleans
-gameover = False
-simulated = False
-running = True
-
-
+GAMEOVER = False
+SIMULATED = False
+RUNNING = True
 GAMEOVERSCREEN = True
 TOGGLECTRL = False
 TIMERSTARTED = False
@@ -58,15 +61,19 @@ def highlightCell(coord, COL):
     pygame.draw.rect(screen,COL,(xpos, ypos, cell_size, cell_size))
 
 
-def backtrackVisualise(screen):
-    index = 0
+def backtrackVisualise():
+    global screen   
     global board
-    global simulated
-    simulated = True
+    global SIMULATED
+    
+    SIMULATED = True
     SIMULATE = True
-    list = []
-    ret = sodoku.runRecursiveHistory(board, list)
-   
+
+    answer_list = []
+    
+    solved_board = sodoku.runRecursiveHistory(board, answer_list)
+
+    index = 0
     while SIMULATE:
         screen.fill(WHITE)
         NEXTSTEP = True
@@ -75,31 +82,27 @@ def backtrackVisualise(screen):
                 SIMULATE = False
                 running = False
             if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
-                board = ret
+                board = solved_board
                 NEXTSTEP = False
                 SIMULATE = False
-                
-                
+                             
         if NEXTSTEP:
-            if len(list) >= index-1:
-                string = list[index]
+            if len(answer_list) >= index-1:
+                string = answer_list[index]
                 index += 1
             
-                act = string[0]
-                num = int(string[1])
-                posr = int(string[2])
-                posc = int(string[3])
+                num = int(string[0])
+                posr = int(string[1])
+                posc = int(string[2])
 
                 board[posr][posc] = num
             else:
                 SIMULATE = False
 
-
-
-        drawBoard(screen)
-    
+        drawBoard()  
         pygame.display.update()
-#ghost entries    
+
+#Ghost entries    
 def init_ghost():
     global ghost
     ghost = []
@@ -130,30 +133,35 @@ def ghostEntry():
                     num_font = pygame.font.Font('freesansbold.ttf', 20)
                     ghost_num_dsp = num_font.render(str(v), True, (100,100,100))
                     screen.blit(ghost_num_dsp, (c_big+3, r_big+3))
+
 #PAUSE SCREEN
-
-def pauseScreen(screen):
-    PAUSED = True
+def pauseScreen():   
     global GAMEOVERSCREEN
-    global running
+    global screen
+    global RUNNING
+    global board
+    global ghost
+    global board_copy
+
+    PAUSED = True
     while PAUSED:
-
-        drawBoard(screen)
-
-       
+        drawBoard()       
         pygame.draw.rect(screen,BLACK,(150, 150, 240, 235))
+
         #TOP - RETURN
         RETURN_BOX = pygame.Rect((152, 152, 236, 57))
         pygame.draw.rect(screen,WHITE, RETURN_BOX)       
         num_font = pygame.font.Font('freesansbold.ttf', 24)
         static_num_dsp = num_font.render("Return (esc)", True, (0,0,0))
         screen.blit(static_num_dsp, (210, 170))
+
         #MIDDLE - RESET
         RESET_BOX = pygame.Rect((152, 211, 236, 56)) 
         pygame.draw.rect(screen,WHITE, RESET_BOX)
         num_font = pygame.font.Font('freesansbold.ttf', 24)
         static_num_dsp = num_font.render("Reset Game", True, (0,0,0))
         screen.blit(static_num_dsp, (210, 227))
+
         #MIDDLE - NEW
         NEW_BOX = pygame.Rect((152, 269, 236, 56)) 
         pygame.draw.rect(screen,WHITE,NEW_BOX)
@@ -167,14 +175,10 @@ def pauseScreen(screen):
         num_font = pygame.font.Font('freesansbold.ttf', 24)
         static_num_dsp = num_font.render("QUIT", True, (0,0,0))
         screen.blit(static_num_dsp, (210, 339))
-
-        global board
-        global ghost
-        global board_copy
-
+       
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                PAUSED, running = False
+                PAUSED, RUNNING = False
             if event.type == pygame.MOUSEBUTTONDOWN:
                 mouse_pos = pygame.mouse.get_pos()
                 x = mouse_pos[0]
@@ -192,7 +196,7 @@ def pauseScreen(screen):
                     PAUSED = False
                 if QUIT_BOX.collidepoint(x,y):
                     PAUSED = False
-                    running = False
+                    RUNNING = False
                     
                     GAMEOVERSCREEN = False
                 if RESET_BOX.collidepoint(x,y):
@@ -208,8 +212,9 @@ def pauseScreen(screen):
 
         pygame.display.update()
 
-def drawBoard(screen):
-    DULLRED = (200,200,255)
+def drawBoard():
+    global screen
+    
     for r in range(9):
         for c in range(9):
             if badEntry[r][c] != 0:
@@ -239,7 +244,9 @@ def drawBoard(screen):
             thickness = 2       
         pygame.draw.line(screen,BLACK,(0, c*cell_size), (9*cell_size, c*cell_size),thickness)
 
-def drawBottomText(screen):
+def drawBottomText():
+    global screen
+
     num_font = pygame.font.Font('freesansbold.ttf', 16)
     #Space     
     static_num_dsp = num_font.render("Space: start solve (press again to skip)", True, (0,0,0))
@@ -257,7 +264,9 @@ def drawBottomText(screen):
     static_num_dsp = num_font.render("Backspace: erase entry", True, (0,0,0))
     screen.blit(static_num_dsp, (350, 580))
 
-def printClock(time, screen):
+def printClock(time):
+    global screen
+
     #print box
     TIME_BOX = pygame.Rect((210, 570, 120, 30)) 
     pygame.draw.rect(screen,BLACK,TIME_BOX)
@@ -267,24 +276,25 @@ def printClock(time, screen):
     static_num_dsp = num_font.render(str(time/1000), True, WHITE)
     screen.blit(static_num_dsp, (250, 574))
 
-def gameOverLoop(screen):
+def gameOverLoop():
+    global screen
     global GAMEOVERSCREEN
-    global running
+    global RUNNING
     if sodoku.nextBlank(board) is None:
    
         while GAMEOVERSCREEN:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     GAMEOVERSCREEN = False                  
-                    running = False
+                    RUNNING = False
                 if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                    pauseScreen(screen)
+                    pauseScreen()
                     print("jere")
             pygame.draw.rect(screen,BLACK,(0, 540, 540, 60))
             pygame.draw.rect(screen,WHITE,(2, 542, 536, 66))
             num_font = pygame.font.Font('freesansbold.ttf', 40)
            
-            if simulated:
+            if SIMULATED:
                 static_num_dsp = num_font.render("COMPUTER WINS!", True, (0,0,0))
                 screen.blit(static_num_dsp, (105, 550))
             else:
@@ -303,14 +313,15 @@ numbers = (pygame.K_1, pygame.K_2, pygame.K_3, pygame.K_4, pygame.K_5,pygame.K_6
 
 init_ghost()
 init_badEntry()
-while running:
+
+while RUNNING:
     passed_time += clock.get_time()
     screen.fill(WHITE)    
 
     for event in pygame.event.get():
         #close game
         if event.type == pygame.QUIT:
-            running = False
+            RUNNING = False
         #click for L and R mouse click
         if event.type == pygame.MOUSEBUTTONDOWN and event.button in (1,3):
             mouse_pos = pygame.mouse.get_pos()
@@ -328,7 +339,7 @@ while running:
            
             # pause game
             if event.key == pygame.K_ESCAPE:
-                pauseScreen(screen)
+                pauseScreen()
             
             #input ghost entry
             if (event.key in numbers or event.key == pygame.K_BACKSPACE) and pygame.key.get_mods() & pygame.KMOD_LCTRL:
@@ -361,7 +372,7 @@ while running:
             #run backtracking algorithm visualisation animation
             elif event.key == pygame.K_SPACE: 
                 init_ghost()               
-                backtrackVisualise(screen) 
+                backtrackVisualise() 
                 print("Space")
             #Backspace if it is a writable cell
             elif event.key == pygame.K_BACKSPACE:
@@ -376,12 +387,12 @@ while running:
         highlightCell(oldcell, WHITE)
         highlightCell(highlightcell, YELLOW)
 
-    drawBoard(screen)  
-    drawBottomText(screen)
-    printClock(passed_time, screen)
+    drawBoard()  
+    drawBottomText()
+    printClock(passed_time)
     clock.tick(30)
 
-    gameOverLoop(screen)
+    gameOverLoop()
 
     pygame.display.update()
 
