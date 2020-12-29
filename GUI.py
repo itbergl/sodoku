@@ -278,8 +278,7 @@ def gameOverLoop(screen):
                     GAMEOVERSCREEN = False                  
                     running = False
                 if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                    pauseScreen(screen)
-                    print("jere")
+                    pauseScreen()
             pygame.draw.rect(screen,BLACK,(0, 540, 540, 60))
             pygame.draw.rect(screen,WHITE,(2, 542, 536, 66))
             num_font = pygame.font.Font('freesansbold.ttf', 40)
@@ -314,14 +313,13 @@ while running:
         #click for L and R mouse click
         if event.type == pygame.MOUSEBUTTONDOWN and event.button in (1,3):
             mouse_pos = pygame.mouse.get_pos()
-            
-            
+                  
             oldcell = highlightcell
             highlightcell = (int(mouse_pos[0]/cell_size), int(mouse_pos[1]/cell_size))
             if highlightcell[0] > 8 or highlightcell[1] > 8:
                 highlightcell = (-1,-1)
             
-            print(pygame.mouse.get_pressed())
+            #print(pygame.mouse.get_pressed())
         if event.type == pygame.KEYDOWN:
             c = int(highlightcell[0])
             r = int(highlightcell[1])
@@ -332,39 +330,36 @@ while running:
             
             #input ghost entry
             if (event.key in numbers or event.key == pygame.K_BACKSPACE) and pygame.key.get_mods() & pygame.KMOD_LCTRL:
-                if event.key == pygame.K_BACKSPACE:
-                    value = 0
-                else:
-                    value = int(pygame.key.name(event.key))
+  
+                value = int(pygame.key.name(event.key))
 
-                print("CTRL " + str(value))
+                #print("CTRL " + str(value))
                 if value not in ghost[r][c]:
                     ghost[r][c][value-1]=value
                 else:
                     ghost[r][c][value-1] = 0
 
             #input answer numbers
-            elif event.key in numbers:
+            elif event.key in numbers or event.key == pygame.K_BACKSPACE:
+
                 value = int(pygame.key.name(event.key))
+
                 if board_copy[r][c] == 0:
-                    if sodoku.addEntry(board, r, c, value):
-                        
+                    if sodoku.addEntry(board, r, c, value):                        
                         ghost[r][c] = [0,0,0,0,0,0,0,0,0]
                         badEntry[r][c] = 0
-                    elif board[r][c]!=value:
-                        if badEntry[r][c]==value:
-                            value = 0
+                    elif board[r][c]==0 and board_copy[r][c]==0:
                         badEntry[r][c] = value                   
 
-                print(str(value))
+                #print(str(value))
 
             #run backtracking algorithm visualisation animation
             elif event.key == pygame.K_SPACE: 
                 init_ghost()               
-                backtrackVisualise(screen) 
-                print("Space")
+                backtrackVisualise() 
+                #print("Space")
             #Backspace if it is a writable cell
-            elif event.key == pygame.K_BACKSPACE:
+            elif event.key == pygame.K_BACKSPACE or event.key == pygame.K_0:
                 if board_copy[r][c] == 0:
                     board[r][c] = 0
                  
