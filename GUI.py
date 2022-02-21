@@ -296,7 +296,7 @@ def gameOverLoop():
     global screen
     global GAMEOVERSCREEN
     global RUNNING
-    if sodoku.nextBlank(board) is None:
+    if not np.any([a == 0 for row in board for a in row]):
 
         while GAMEOVERSCREEN:
             for event in pygame.event.get():

@@ -1,6 +1,3 @@
-from os import environ
-import time
-import multiprocessing
 import numpy as np
 import random
 
@@ -66,11 +63,14 @@ def isValid(sodoku, row, col, value):
 
 
 # finds the next blank along, left to right then up to down
-def nextBlank(sodoku):
-    for i in range(9):
-        for j in range(9):
-            if sodoku[i][j] == 0:
-                return (i, j)
+def nextBlank(sodoku, index):
+    for next in range(index + 1, 81):
+        mod = next % 9
+        r = int((next - mod) / 9)
+        if sodoku[r][mod] == 0:
+            index = next
+            return (r, mod)
+
     return None
 
 
@@ -86,14 +86,15 @@ def addEntry(sodoku, row, col, value):
 #make dummy copy and save into answer list
 def runRecursiveHistory(sodoku, ans):
     dummy = np.copy(sodoku)
-    recursiveHistory(dummy, ans)
+    pointer = -1
+    recursiveHistory(dummy, pointer, ans)
     return dummy
 
 
 #recursively solve - record history
-def recursiveHistory(sodoku, list):
+def recursiveHistory(sodoku, pointer, list):
 
-    pos = nextBlank(sodoku)
+    pos = nextBlank(sodoku, pointer)
     if pos == None:
         return True
 
@@ -102,7 +103,7 @@ def recursiveHistory(sodoku, list):
         if isValid(sodoku, pos[0], pos[1], i):
             sodoku[pos[0]][pos[1]] = i
             list.append(str(i) + str(pos[0]) + str(pos[1]) + "\n")
-            if recursiveHistory(sodoku, list):
+            if recursiveHistory(sodoku, pointer, list):
                 return True
         sodoku[pos[0]][pos[1]] = 0
         list.append("0" + str(pos[0]) + str(pos[1]) + "\n")
@@ -110,8 +111,8 @@ def recursiveHistory(sodoku, list):
 
 
 # recursively solve - no recording
-def recursive(sodoku):
-    pos = nextBlank(sodoku)
+def recursive(sodoku, index):
+    pos = nextBlank(sodoku, index)
     if pos == None:
         return True
 
