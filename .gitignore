@@ -1,1 +1,2 @@
-dep/temp.txt
+.venv/
+__pycache__/
